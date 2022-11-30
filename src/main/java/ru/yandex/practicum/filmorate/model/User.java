@@ -1,19 +1,22 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.*;
+
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.cglib.core.Local;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Past;
+import javax.validation.constraints.Positive;
 import java.time.LocalDate;
 
 @Data
 @Builder
 public class User {
-    @Positive(message = "ID cannot be negative")
-    private int id;
     @Email(message = "Email is wrong")
     private final String email;
+    @Positive(message = "ID cannot be negative")
+    private int id;
     @NotBlank(message = "Login cannot be blank")
     private String login;
     @Builder.Default
