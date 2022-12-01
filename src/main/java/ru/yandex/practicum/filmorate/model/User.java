@@ -19,8 +19,8 @@ public class User {
     private int id;
     @NotBlank(message = "Login cannot be blank")
     private String login;
-    @Builder.Default
-    private String userName = login;
+
+    private String userName;
     @Past(message = "Birthdate cannot be in future or present")
     private LocalDate birthdate;
 }
