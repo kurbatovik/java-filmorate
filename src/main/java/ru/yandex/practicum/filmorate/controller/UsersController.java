@@ -1,37 +1,31 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @Slf4j
 @RequestMapping("/users")
 @RestController
-public class UsersController extends AbstractController {
+public class UsersController extends AbstractController<User> {
 
-
-    private final Map<Integer, User> users = new HashMap<>();
     private final Set<String> userEmails = new HashSet<>();
 
-    @GetMapping("")
-    public List<User> getUser() {
-        log.info("User count: {}", users.size());
-        return new ArrayList<>(users.values());
+    public UsersController() {
+        entityName = "User";
     }
 
-    @ResponseStatus(value = HttpStatus.CREATED)
-    @PostMapping(value = "")
-    public User postUser(@Validated @RequestBody @NonNull User user) {
-        log.debug("Request on create User: {}", user);
+    @Override
+    protected User create(User user) {
+        String userName = (user.getName() == null || user.getName().isBlank())
+                ? user.getLogin() : user.getName();
         String userEmail = user.getEmail();
         if (userEmails.contains(userEmail)) {
             String error = String.format("User with email: %s already exists", userEmail);
@@ -39,50 +33,29 @@ public class UsersController extends AbstractController {
             throw new ResponseStatusException(UNPROCESSABLE_ENTITY,
                     error);
         }
-        return createUser(user, userEmail);
+        User newUser = User.builder()
+                .id(counter.incrementAndGet())
+                .email(userEmail)
+                .login(user.getLogin())
+                .name(userName)
+                .birthday(user.getBirthday())
+                .build();
+        userEmails.add(userEmail);
+        return newUser;
     }
 
-    @PutMapping(value = "")
-    public User putUser(@Validated @RequestBody @NonNull User user) {
-        return putUser(user, user.getId());
-    }
-
-    @PutMapping(value = "/{id}")
-    public User putUser(@Validated @RequestBody @NonNull User user, @PathVariable(name = "id") int userID) {
-        log.debug("Request on update User: {}", user);
-        User updateUser = users.get(user.getId());
-        if (updateUser == null) {
-            String error = String.format("User with id: %d not found", userID);
-            log.info(error);
-            throw new ResponseStatusException(NOT_FOUND,
-                    error);
+    @Override
+    public User update(int userID, User user, User updateUser) {
+        if (!user.getEmail().equals(updateUser.getEmail())) {
+            userEmails.remove(user.getEmail());
+            userEmails.add(updateUser.getEmail());
         }
-        log.debug("User has been found to update: {}", updateUser);
         updateUser.setEmail(user.getEmail());
         updateUser.setLogin(user.getLogin());
         if (user.getName() != null) {
             updateUser.setName(user.getName());
         }
         updateUser.setBirthday(user.getBirthday());
-        log.info("User updated: {}", updateUser);
         return updateUser;
-    }
-
-    private User createUser(@NonNull User user, String userEmail) {
-        String userName = (user.getName() == null || user.getName().isBlank())
-                ? user.getLogin() : user.getName();
-        int userId = counter.incrementAndGet();
-        User newUser = User.builder()
-                .id(userId)
-                .email(userEmail)
-                .login(user.getLogin())
-                .name(userName)
-                .birthday(user.getBirthday())
-                .build();
-        users.put(userId, newUser);
-        userEmails.add(userEmail);
-        log.info("User has been created: {}", newUser);
-        log.debug("User count: {}", users.size());
-        return newUser;
     }
 }

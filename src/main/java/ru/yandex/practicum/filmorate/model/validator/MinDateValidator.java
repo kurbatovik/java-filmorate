@@ -11,7 +11,7 @@ import java.time.format.DateTimeParseException;
 @Slf4j
 public class MinDateValidator implements ConstraintValidator<MinDate, ChronoLocalDate> {
 
-    LocalDate minDate;
+    private LocalDate minDate;
 
     @Override
     public void initialize(MinDate constraintAnnotation) {
@@ -25,6 +25,6 @@ public class MinDateValidator implements ConstraintValidator<MinDate, ChronoLoca
 
     @Override
     public boolean isValid(ChronoLocalDate chronoLocalDate, ConstraintValidatorContext constraintValidatorContext) {
-        return minDate.isBefore(chronoLocalDate);
+        return minDate.isBefore(chronoLocalDate) || chronoLocalDate.isEqual(minDate);
     }
 }
