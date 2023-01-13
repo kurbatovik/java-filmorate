@@ -15,7 +15,6 @@ import java.util.List;
 @RestController
 public class FilmsController extends AbstractController<Film> {
 
-
     @Autowired
     public FilmsController(FilmService service) {
         this.service = service;
