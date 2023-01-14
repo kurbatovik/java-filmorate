@@ -18,11 +18,12 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 @Slf4j
 public class UserService extends AbstractService<User> {
 
-    private final Set<String> userEmails = new HashSet<>();
+    private final Set<String> userEmails;
 
     @Autowired
     public UserService(InMemoryStorage<User> storage) {
         super(storage);
+        userEmails = new HashSet<>();
     }
 
     @Override
