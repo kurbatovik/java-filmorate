@@ -7,14 +7,21 @@ import ru.yandex.practicum.filmorate.model.validator.MinDate;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Builder
-public class Film implements ModelInterface {
+public class Film implements Model {
+
     @PositiveOrZero(message = "ID cannot be negative")
-    private final int id;
+    private final long id;
+
+    private final Set<Long> likes = new HashSet<>();
+
     @NotBlank(message = "Name can not be blank")
     private String name;
+
     @NotBlank(message = "Description can not be blank")
     @Size(max = 200, message = "Description can not be more 200 char")
     private String description;

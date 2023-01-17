@@ -4,43 +4,35 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import ru.yandex.practicum.filmorate.model.ModelInterface;
+import ru.yandex.practicum.filmorate.model.Model;
+import ru.yandex.practicum.filmorate.service.AbstractService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Slf4j
-@RequestMapping("/entities")
-@RestController
-public abstract class AbstractController<E extends ModelInterface> {
+public abstract class AbstractController<E extends Model> {
 
-    protected final AtomicInteger counter = new AtomicInteger();
-    protected final Map<Integer, E> entities = new HashMap<>();
-
-    protected String entityName = "Abstract";
+    protected AbstractService<E> service;
 
     @GetMapping("")
     public List<E> get() {
-        log.info("{} count: {}", entityName, entities.size());
-        return new ArrayList<>(entities.values());
+        log.info("Request on get all");
+        return service.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public E get(@PathVariable(name = "id") Integer id) {
+        log.info("Request on get with id {}", id);
+        return service.findById(id);
     }
 
     @ResponseStatus(value = HttpStatus.CREATED)
     @PostMapping(value = "")
     public E post(@Valid @RequestBody @NonNull E entity) {
-        log.debug("{} count: {}", entityName, entities.size());
-        log.debug("Request on create {}: {}", entityName, entity);
-        E newEntity = create(entity);
-        entities.put(newEntity.getId(), newEntity);
-        log.info("{} has been created: {}", entityName, newEntity);
-        log.debug("{} count: {}", entityName, entities.size());
+        log.debug("Request on create: {}", entity);
+        E newEntity = service.create(entity);
+        log.info("Has been created: {}", newEntity);
         return newEntity;
     }
 
@@ -50,23 +42,11 @@ public abstract class AbstractController<E extends ModelInterface> {
     }
 
     @PutMapping(value = "/{id}")
-    public E put(@Valid @RequestBody @NonNull E entity, @PathVariable(name = "id") int id) {
-        log.debug("Request on update {}: {}", entityName, entity);
-
-        E updateEntity = entities.get(entity.getId());
-        if (updateEntity == null) {
-            String error = String.format("%s with id: %d not found", entityName, id);
-            log.info(error);
-            throw new ResponseStatusException(NOT_FOUND,
-                    error);
-        }
-        updateEntity = update(id, entity, updateEntity);
-        log.debug("{} has been found to update: {}", entityName, updateEntity);
-        log.info("{} updated: {}", entityName, updateEntity);
+    public E put(@Valid @RequestBody @NonNull E entity, @PathVariable(name = "id") long id) {
+        log.debug("Request on update: {}", entity);
+        E updateEntity = service.update(id, entity);
+        log.info("Updated: {}", updateEntity);
         return updateEntity;
     }
 
-    protected abstract E create(E entity);
-
-    protected abstract E update(int id, E entity, E updateEntity);
 }
