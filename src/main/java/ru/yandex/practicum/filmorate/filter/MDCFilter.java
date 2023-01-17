@@ -20,7 +20,11 @@ public class MDCFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String[] queries = request.getServletPath().split("/");
         MDC.put("trackingNumber", ++track + "");
-        MDC.put("query", queries[1]);
+        if (queries.length > 1) {
+            MDC.put("query", queries[1]);
+        } else {
+            MDC.put("query", "home");
+        }
         try {
             filterChain.doFilter(request, response);
         } finally {
