@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -14,4 +15,8 @@ public interface Storage<E> {
     List<E> getAll();
 
     E getById(long id);
+
+    List<E> getByIdSet(Collection<Long> ids);
+
+    List<E> getByIdSet(Collection<Long> ids, boolean isSort);
 }

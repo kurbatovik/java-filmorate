@@ -4,6 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.Collection;
+import java.util.List;
+
 @Slf4j
 @Component
 public class InMemoryFilmStorage extends InMemoryStorage<Film> {
@@ -24,5 +27,15 @@ public class InMemoryFilmStorage extends InMemoryStorage<Film> {
     @Override
     public boolean delete(long id) {
         return remove(id);
+    }
+
+    @Override
+    public List<Film> getByIdSet(Collection<Long> ids) {
+        return null;
+    }
+
+    @Override
+    public List<Film> getByIdSet(Collection<Long> ids, boolean isSort) {
+        return null;
     }
 }

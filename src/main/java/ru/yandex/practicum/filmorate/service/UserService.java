@@ -5,11 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.InMemoryStorage;
+import ru.yandex.practicum.filmorate.storage.UserDbStorage;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
@@ -18,36 +16,30 @@ import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 @Slf4j
 public class UserService extends AbstractService<User> {
 
-    private final Set<String> userEmails;
 
     @Autowired
-    public UserService(InMemoryStorage<User> storage) {
+    public UserService(UserDbStorage storage) {
         super(storage);
-        userEmails = new HashSet<>();
     }
 
     @Override
     public User create(User user) {
         String userEmail = user.getEmail();
-        if (userEmails.contains(userEmail)) {
+        if (((UserDbStorage) storage).getByEmail(userEmail) != null) {
             String error = String.format("User with email: %s already exists", userEmail);
             log.info(error);
             throw new ResponseStatusException(UNPROCESSABLE_ENTITY,
                     error);
         }
-        userEmails.add(userEmail);
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
         return storage.create(user);
     }
 
     @Override
     public User update(long id, User user) {
         User updateUser = findById(id);
-
-        if (!user.getEmail().equals(updateUser.getEmail())) {
-            userEmails.remove(user.getEmail());
-            userEmails.add(updateUser.getEmail());
-        }
-
         updateUser.setEmail(user.getEmail());
         updateUser.setLogin(user.getLogin());
         if (user.getName() != null) {
@@ -58,21 +50,19 @@ public class UserService extends AbstractService<User> {
     }
 
     public List<User> addFriend(long id, long friendId) {
-        Set<Long> friendsIds = findById(id).getFriends();
-        findById(friendId).getFriends().add(id);
-        friendsIds.add(friendId);
-        return getList(friendsIds);
+        findById(id);
+        findById(friendId);
+        return ((UserDbStorage)storage).addFriend(id, friendId);
 
     }
 
     public List<User> delFriend(long id, long friendID) {
-        Set<Long> friendsIds = findById(id).getFriends();
-        findById(friendID).getFriends().remove(id);
-        friendsIds.remove(friendID);
-        return getList(friendsIds);
+        findById(id);
+        findById(friendID);
+        return getList(((UserDbStorage)storage).delFriend(id, friendID));
     }
 
-    public List<User> findFriendById(long id) {
+    public List<User> findFriendsById(long id) {
         return getList(findById(id).getFriends());
     }
 

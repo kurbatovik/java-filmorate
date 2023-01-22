@@ -27,6 +27,12 @@ public abstract class AbstractController<E extends Model> {
         return service.findById(id);
     }
 
+    @GetMapping("/delete/{id}")
+    public String delete(@PathVariable(name = "id") Integer id) {
+        log.info("Request on delete with id {}", id);
+        return service.deleteById(id) ? "Success" : "Failure";
+    }
+
     @ResponseStatus(value = HttpStatus.CREATED)
     @PostMapping(value = "")
     public E post(@Valid @RequestBody @NonNull E entity) {

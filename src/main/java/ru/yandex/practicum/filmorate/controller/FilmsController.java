@@ -22,12 +22,12 @@ public class FilmsController extends AbstractController<Film> {
     }
 
     @PutMapping(value = "/{id}/like/{userId}")
-    public List<User> addFriend(@PathVariable(value = "id") long id, @PathVariable(value = "userId") long userId) {
+    public List<User> addLike(@PathVariable(value = "id") long id, @PathVariable(value = "userId") long userId) {
         return getFilmService().addLike(id, userId);
     }
 
     @DeleteMapping(value = "/{id}/like/{userId}")
-    public List<User> delFriend(@PathVariable(value = "id") long id, @PathVariable(value = "userId") long userID) {
+    public List<User> delLike(@PathVariable(value = "id") long id, @PathVariable(value = "userId") long userID) {
         return getFilmService().delLike(id, userID);
     }
 
