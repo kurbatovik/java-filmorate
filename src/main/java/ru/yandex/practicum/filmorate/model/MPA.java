@@ -11,7 +11,7 @@ import javax.validation.constraints.PositiveOrZero;
 public class MPA implements Model{
 
     @PositiveOrZero(message = "ID cannot be negative")
-    private final long id;
+    private long id;
 
     @NotBlank(message = "Name can not be blank")
     private String name;

@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,36 +35,37 @@ class FilmDbStorageTest {
 
     @Test
     void update() {
-        Film film = filmStorage.getById(1);
+        Film film = filmStorage.getById(1).orElseThrow();
         film.setName("Tolka");
         filmStorage.update(film.getId(), film);
-        assertThat(filmStorage.getById(1).getName()).isEqualTo("Tolka");
+        assertThat(filmStorage.getById(1).orElseThrow().getName()).isEqualTo("Tolka");
 
         film.setDescription("Tolka");
         filmStorage.update(film.getId(), film);
-        assertThat(filmStorage.getById(1).getDescription()).isEqualTo("Tolka");
+        assertThat(filmStorage.getById(1).orElseThrow().getDescription()).isEqualTo("Tolka");
 
         film.setDuration(50);
         filmStorage.update(film.getId(), film);
-        assertThat(filmStorage.getById(1).getDuration()).isEqualTo(50);
+        assertThat(filmStorage.getById(1).orElseThrow().getDuration()).isEqualTo(50);
 
         film.setReleaseDate(LocalDate.now().minusYears(33));
         filmStorage.update(film.getId(), film);
-        assertThat(filmStorage.getById(1).getReleaseDate())
+        assertThat(filmStorage.getById(1).orElseThrow().getReleaseDate())
                 .isEqualTo(LocalDate.now().minusYears(33));
 
-        assertThat(filmStorage.getById(1).getMpa().getId()).isEqualTo(3);
+        assertThat(filmStorage.getById(1).orElseThrow().getMpa().getId()).isEqualTo(3);
         film.setMpa(MPA.builder().id(1).build());
         filmStorage.update(film.getId(), film);
-        assertThat(filmStorage.getById(1).getMpa().getId()).isEqualTo(1);
+        assertThat(filmStorage.getById(1).orElseThrow().getMpa().getId()).isEqualTo(1);
 
-        assertThat(filmStorage.getById(1).getGenres()).hasSize(0);
+        assertThat(filmStorage.getById(1).orElseThrow().getGenres()).hasSize(0);
         film.getGenres().add(Genre.builder().id(2).build());
         film.getGenres().add(Genre.builder().id(1).build());
         filmStorage.update(film.getId(), film);
-        assertThat(filmStorage.getById(1).getGenres()).hasSize(2);
-        assertThat(filmStorage.getById(1).getGenres().get(0).getId()).isEqualTo(2);
-        assertThat(filmStorage.getById(1).getGenres().get(1).getId()).isEqualTo(1);
+        assertThat(filmStorage.getById(1).orElseThrow().getGenres()).hasSize(2);
+        List<Genre> genres = new ArrayList<>(filmStorage.getById(1).orElseThrow().getGenres());
+        assertThat(genres.get(0).getId()).isEqualTo(2);
+        assertThat(genres.get(1).getId()).isEqualTo(1);
     }
 
     @Test
@@ -85,72 +87,18 @@ class FilmDbStorageTest {
 
     @Test
     void getById() {
-        Film film = filmStorage.getById(1);
+        Film film = filmStorage.getById(1).orElseThrow();
         assertThat(film.getName()).isEqualTo("Film");
-        film = filmStorage.getById(9);
-        assertThat(film).isNull();
     }
 
     @Test
     void getByIdSet() {
         List<Long> idsFilms = List.of(3L, 1L, 2L);
-        List<Film> films = filmStorage.getByIdSet(idsFilms, false);
+        List<Film> films = filmStorage.getByIdSet(idsFilms);
         assertThat(films).hasSize(3);
         Film film = films.get(0);
         assertThat(film.getId()).isEqualTo(1);
         assertThat(film.getName()).isEqualTo("Film");
-    }
-
-    @Test
-    void GetSortedListByIdSet() {
-        List<Long> idsFilms = List.of(3L, 1L, 2L);
-        List<Film> films = filmStorage.getByIdSet(idsFilms, true);
-        assertThat(films).hasSize(3);
-        Film film = films.get(1);
-        assertThat(film.getId()).isEqualTo(1);
-        assertThat(film.getName()).isEqualTo("Film");
-    }
-
-    @Test
-    void addAndGetLike() {
-        filmStorage.addLike(1, 1);
-        Film film = filmStorage.getById(1);
-        assertThat(film.getLikes()).hasSize(1);
-        assertThat(film.getLikes().get(0)).isEqualTo(1);
-    }
-
-    @Test
-    void delLike() {
-        filmStorage.addLike(1, 1);
-        filmStorage.delLike(1, 1);
-        Film film = filmStorage.getById(1);
-        assertThat(film.getLikes()).hasSize(0);
-    }
-
-    @Test
-    void getPopular() {
-        filmStorage.addLike(3, 1);
-        List<Long> filmsIds = filmStorage.getPopular(10);
-        assertThat(filmsIds).hasSize(3);
-        assertThat(filmsIds.get(0)).isEqualTo(3);
-        assertThat(filmsIds.get(1)).isEqualTo(1);
-        assertThat(filmsIds.get(2)).isEqualTo(2);
-
-        filmStorage.addLike(3, 2);
-        filmStorage.addLike(2, 2);
-        filmsIds = filmStorage.getPopular(10);
-        assertThat(filmsIds).hasSize(3);
-        assertThat(filmsIds.get(0)).isEqualTo(3);
-        assertThat(filmsIds.get(1)).isEqualTo(2);
-        assertThat(filmsIds.get(2)).isEqualTo(1);
-
-        filmStorage.addLike(3, 2);
-        filmStorage.addLike(2, 2);
-        filmsIds = filmStorage.getPopular(10);
-        assertThat(filmsIds).hasSize(3);
-        assertThat(filmsIds.get(0)).isEqualTo(3);
-        assertThat(filmsIds.get(1)).isEqualTo(2);
-        assertThat(filmsIds.get(2)).isEqualTo(1);
     }
 
     private static Film getFilm(){

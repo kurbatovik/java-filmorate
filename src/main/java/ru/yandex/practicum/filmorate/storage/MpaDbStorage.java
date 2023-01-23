@@ -13,10 +13,10 @@ import ru.yandex.practicum.filmorate.model.MPA;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Repository
-public class MpaDbStorage implements Storage<MPA>{
+public class MpaDbStorage implements Storage<MPA> {
 
     private static final RowMapper<MPA> MPA_MAPPER = ((rs, rowNum) -> MPA.builder()
             .id(rs.getLong("id"))
@@ -39,19 +39,20 @@ public class MpaDbStorage implements Storage<MPA>{
                 .usingGeneratedKeyColumns("id");
         SqlParameterSource parameters = new BeanPropertySqlParameterSource(mpa);
         long id = simpleJdbcInsert.executeAndReturnKey(parameters).longValue();
-        return getById(id);
+        mpa.setId(id);
+        return mpa;
     }
 
     @Override
     public MPA update(long id, MPA mpa) {
         String sql = "UPDATE mpa SET  name = ? WHERE id = ?";
         jdbcTemplate.update(sql, mpa.getName(), mpa.getId());
-        return getById(id);
+        return mpa;
     }
 
     @Override
     public boolean delete(long id) {
-        String sqlQuery = "delete from mpa where id = ?";
+        String sqlQuery = "DELETE FROM mpa WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
     }
 
@@ -62,9 +63,9 @@ public class MpaDbStorage implements Storage<MPA>{
     }
 
     @Override
-    public MPA getById(long id) {
+    public Optional<MPA> getById(long id) {
         String sqlQuery = "SELECT * FROM mpa WHERE id = ?";
-        return jdbcTemplate.query(sqlQuery, EXTRACTOR_MPA, id);
+        return Optional.ofNullable(jdbcTemplate.query(sqlQuery, EXTRACTOR_MPA, id));
     }
 
     @Override
@@ -72,14 +73,5 @@ public class MpaDbStorage implements Storage<MPA>{
         String setToSql = String.join(",", Collections.nCopies(ids.size(), "?"));
         String sql = String.format("SELECT * FROM mpa WHERE id IN (%s)", setToSql);
         return jdbcTemplate.query(sql, MPA_MAPPER, ids.toArray());
-    }
-
-    @Override
-    public List<MPA> getByIdSet(Collection<Long> ids, boolean isSort) {
-        if (isSort) {
-            return ids.stream().map(this::getById).collect(Collectors.toList());
-        } else {
-            return getByIdSet(ids);
-        }
     }
 }

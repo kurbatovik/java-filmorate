@@ -23,7 +23,7 @@ public class MPAService extends AbstractService<MPA> {
 
     @Override
     public MPA update(long id, MPA mpa) {
-        MPA updateMPA = storage.getById(mpa.getId());
+        MPA updateMPA = findById(mpa.getId());
         updateMPA.setName(mpa.getName());
         return storage.update(id, updateMPA);
     }

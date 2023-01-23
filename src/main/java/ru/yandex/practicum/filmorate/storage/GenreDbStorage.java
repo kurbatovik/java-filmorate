@@ -13,10 +13,10 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Repository
-public class GenreDbStorage implements Storage<Genre>{
+public class GenreDbStorage implements Storage<Genre> {
 
     private static final RowMapper<Genre> GENRE_MAPPER = ((rs, rowNum) -> Genre.builder()
             .id(rs.getLong("id"))
@@ -39,19 +39,20 @@ public class GenreDbStorage implements Storage<Genre>{
                 .usingGeneratedKeyColumns("id");
         SqlParameterSource parameters = new BeanPropertySqlParameterSource(genre);
         long id = simpleJdbcInsert.executeAndReturnKey(parameters).longValue();
-        return getById(id);
+        genre.setId(id);
+        return genre;
     }
 
     @Override
     public Genre update(long id, Genre genre) {
         String sql = "UPDATE genres SET  name = ? WHERE id = ?";
         jdbcTemplate.update(sql, genre.getName(), genre.getId());
-        return getById(id);
+        return genre;
     }
 
     @Override
     public boolean delete(long id) {
-        String sqlQuery = "delete from genres where id = ?";
+        String sqlQuery = "DELETE FROM genres WHERE id = ?";
         return jdbcTemplate.update(sqlQuery, id) > 0;
     }
 
@@ -62,9 +63,9 @@ public class GenreDbStorage implements Storage<Genre>{
     }
 
     @Override
-    public Genre getById(long id) {
+    public Optional<Genre> getById(long id) {
         String sqlQuery = "SELECT * FROM genres WHERE id = ?";
-        return jdbcTemplate.query(sqlQuery, EXTRACTOR_GENRE, id);
+        return Optional.ofNullable(jdbcTemplate.query(sqlQuery, EXTRACTOR_GENRE, id));
     }
 
     @Override
@@ -74,12 +75,4 @@ public class GenreDbStorage implements Storage<Genre>{
         return jdbcTemplate.query(sql, GENRE_MAPPER, ids.toArray());
     }
 
-    @Override
-    public List<Genre> getByIdSet(Collection<Long> ids, boolean isSort) {
-        if (isSort) {
-            return ids.stream().map(this::getById).collect(Collectors.toList());
-        } else {
-            return getByIdSet(ids);
-        }
-    }
 }

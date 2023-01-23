@@ -5,7 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.LikeStorage;
+import ru.yandex.practicum.filmorate.storage.Storage;
 
 import java.util.HashSet;
 import java.util.List;
@@ -17,11 +18,13 @@ import java.util.Set;
 public class FilmService extends AbstractService<Film> {
 
     private final UserService userService;
+    private final LikeStorage likeStorage;
 
     @Autowired
-    public FilmService(FilmDbStorage storage, UserService userService) {
+    public FilmService(Storage<Film> storage, UserService userService, LikeStorage likeStorage) {
         super(storage);
         this.userService = userService;
+        this.likeStorage = likeStorage;
     }
 
     @Override
@@ -45,22 +48,23 @@ public class FilmService extends AbstractService<Film> {
     public List<User> addLike(long id, long userId) {
         findById(id);
         userService.findById(userId);
-        ((FilmDbStorage)storage).addLike(id, userId);
+        likeStorage.addLike(id, userId);
         return userService.getList(getLikes(id));
     }
 
     private Set<Long> getLikes(long id) {
-        return new HashSet<>(((FilmDbStorage)storage).getLikes(id));
+        return new HashSet<>(likeStorage.getLikesByFilmId(id));
     }
 
     public List<User> delLike(long id, long userId) {
         findById(id);
         userService.findById(userId);
-        ((FilmDbStorage)storage).delLike(id, userId);
+        likeStorage.delLike(id, userId);
         return userService.getList(getLikes(id));
     }
 
     public List<Film> findPopularFilms(int count) {
-        return getList(((FilmDbStorage)storage).getPopular(count), true);
+        return getList(likeStorage.getPopular(count));
     }
+
 }

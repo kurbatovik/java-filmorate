@@ -7,18 +7,18 @@ import ru.yandex.practicum.filmorate.model.validator.MinDate;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 
 @Data
 @Builder
 public class Film implements Model {
 
     @PositiveOrZero(message = "ID cannot be negative")
-    private final long id;
+    private long id;
 
-    private final List<Long> likes = new LinkedList<>();
-
-    private final List<Genre> genres = new LinkedList<>();
+    private final LinkedHashSet<Genre> genres = new LinkedHashSet<>();
 
 
     @NotBlank(message = "Name can not be blank")
@@ -36,9 +36,10 @@ public class Film implements Model {
     @Positive(message = "Duration can not be negative or zero")
     private int duration;
 
+    @NotNull
     private MPA mpa;
 
-    public Map<String, Object> toMap(){
+    public Map<String, Object> toMap() {
         Map<String, Object> result = new HashMap<>();
         result.put("name", name);
         result.put("description", description);

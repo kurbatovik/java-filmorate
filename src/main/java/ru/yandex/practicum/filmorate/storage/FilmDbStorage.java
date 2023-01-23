@@ -1,22 +1,22 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
-public class FilmDbStorage implements Storage<Film>{
+public class FilmDbStorage implements Storage<Film> {
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -58,12 +58,11 @@ public class FilmDbStorage implements Storage<Film>{
                 .withTableName("films")
                 .usingGeneratedKeyColumns("id");
         long id = simpleJdbcInsert.executeAndReturnKey(film.toMap()).longValue();
-        if (film.getGenres()!= null && film.getGenres().size() > 0) {
-            film.getGenres().stream()
-                    .map(Genre::getId)
-                    .forEach(genreId -> addGenre(id, genreId));
+        if (film.getGenres() != null && film.getGenres().size() > 0) {
+            addGenres(id, List.copyOf(film.getGenres()));
         }
-        return getById(id);
+        film.setId(id);
+        return film;
     }
 
     @Override
@@ -73,9 +72,9 @@ public class FilmDbStorage implements Storage<Film>{
                 film.getMpa().getId(), film.getId());
         deleteGenre(id);
         if (film.getGenres().size() > 0) {
-            film.getGenres().forEach(genre -> addGenre(id, genre.getId()));
+            addGenres(id, List.copyOf(film.getGenres()));
         }
-        return getById(id);
+        return film;
     }
 
     @Override
@@ -90,54 +89,23 @@ public class FilmDbStorage implements Storage<Film>{
     }
 
     @Override
-    public Film getById(long id) {
+    public Optional<Film> getById(long id) {
         String sqlQuery = SELECT_QUERY + "WHERE f.id = ?";
         List<Film> films = jdbcTemplate.query(sqlQuery, extractorFilm, id);
-        if (films != null && films.size() > 0) {
-            return films.get(0);
-        } else {
-            return null;
-        }
+        Film film = (films == null || films.size() == 0) ? null : films.get(0);
+        return Optional.ofNullable(film);
     }
 
     @Override
     public List<Film> getByIdSet(Collection<Long> ids) {
+        if (ids.size() == 0) {
+            return List.of();
+        }
         String setToSql = String.join(",", Collections.nCopies(ids.size(), "?"));
         String sql = SELECT_QUERY + String.format("WHERE f.id IN (%s)", setToSql);
         return jdbcTemplate.query(sql, extractorFilm, ids.toArray());
     }
 
-    @Override
-    public List<Film> getByIdSet(Collection<Long> ids, boolean isSort) {
-        if (isSort) {
-            return ids.stream().map(this::getById).collect(Collectors.toList());
-        } else {
-            return getByIdSet(ids);
-        }
-    }
-
-    public void addLike(long id, long userId){
-        if (getLikes(id).contains(userId)) {
-            return;
-        }
-        String sqlQuery = "INSERT INTO likes (film_id, user_id) VALUES ( ?, ? )";
-        jdbcTemplate.update(sqlQuery, id, userId);
-    }
-
-    public List<Long> getLikes(long id){
-        String query = "SELECT USER_ID FROM likes WHERE film_id = ?";
-        return jdbcTemplate.queryForList(query, Long.class, id);
-    }
-
-    public void delLike(long id, long userId) {
-        jdbcTemplate.update("DELETE FROM likes WHERE film_id = ? AND user_id = ?", id, userId);
-    }
-
-    public List<Long> getPopular(int count) {
-        String sql = "SELECT f.id FROM films f LEFT JOIN likes l ON f.id = l.film_id " +
-                "GROUP BY f.id ORDER BY COUNT(l.user_id) DESC LIMIT ?";
-        return jdbcTemplate.queryForList(sql, Long.class, count);
-    }
 
     private Film createFilm(ResultSet rs, long id) throws SQLException {
         Film film = Film.builder()
@@ -150,25 +118,26 @@ public class FilmDbStorage implements Storage<Film>{
         MPA mpa = MPA.builder().id(rs.getLong("mpa_id"))
                 .name(rs.getString("mpa_name")).build();
         film.setMpa(mpa);
-        film.getLikes().addAll(getLikes(id));
         return film;
     }
 
-    private void addGenre(Long filmId, long genreId) {
-        if (checkGenre(filmId, genreId)) {
-            return;
-        }
-        String sqlQuery = "INSERT INTO films_genres (film_id, genre_id) VALUES ( ?, ? )";
-        jdbcTemplate.update(sqlQuery, filmId, genreId);
+    private void addGenres(Long filmId, List<Genre> genres) {
+        jdbcTemplate.batchUpdate(
+                "INSERT INTO films_genres (film_id, genre_id) VALUES ( ?, ? )",
+                new BatchPreparedStatementSetter() {
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setLong(1, filmId);
+                        ps.setLong(2, genres.get(i).getId());
+                    }
+
+                    public int getBatchSize() {
+                        return genres.size();
+                    }
+                });
     }
 
     private void deleteGenre(long id) {
         jdbcTemplate.update("DELETE FROM films_genres WHERE film_id = ?", id);
     }
 
-    private boolean checkGenre(long filmId, long genreId) {
-        SqlRowSet filmGenreRow = jdbcTemplate.queryForRowSet("SELECT * FROM films_genres " +
-                "WHERE film_id = ? AND genre_id = ?", filmId, genreId);
-        return filmGenreRow.next();
-    }
 }

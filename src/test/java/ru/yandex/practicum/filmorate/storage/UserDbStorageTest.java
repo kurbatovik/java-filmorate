@@ -32,22 +32,22 @@ class UserDbStorageTest {
 
     @Test
     void update() {
-        User user = userStorage.getById(1);
+        User user = userStorage.getById(1).orElseThrow();
         user.setName("Tolka");
         userStorage.update(user.getId(), user);
-        assertThat(userStorage.getById(1).getName()).isEqualTo("Tolka");
+        assertThat(userStorage.getById(1).orElseThrow().getName()).isEqualTo("Tolka");
 
         user.setLogin("Tolka");
         userStorage.update(user.getId(), user);
-        assertThat(userStorage.getById(1).getLogin()).isEqualTo("Tolka");
+        assertThat(userStorage.getById(1).orElseThrow().getLogin()).isEqualTo("Tolka");
 
         user.setEmail("Tolka@gmail.com");
         userStorage.update(user.getId(), user);
-        assertThat(userStorage.getById(1).getEmail()).isEqualTo("Tolka@gmail.com");
+        assertThat(userStorage.getById(1).orElseThrow().getEmail()).isEqualTo("Tolka@gmail.com");
 
         user.setBirthday(LocalDate.now().minusYears(33));
         userStorage.update(user.getId(), user);
-        assertThat(userStorage.getById(1).getBirthday())
+        assertThat(userStorage.getById(1).orElseThrow().getBirthday())
                 .isEqualTo(LocalDate.now().minusYears(33));
     }
 
@@ -70,66 +70,20 @@ class UserDbStorageTest {
 
     @Test
     void getById() {
-        User user = userStorage.getById(1);
+        User user = userStorage.getById(1).orElseThrow();
         assertThat(user.getName()).isEqualTo("est adipisicing");
-        user = userStorage.getById(9);
-        assertThat(user).isNull();
     }
 
     @Test
     void getByIdSet() {
         List<Long> idsUsers = List.of(3L, 1L, 2L);
-        List<User> users = userStorage.getByIdSet(idsUsers, false);
+        List<User> users = userStorage.getByIdSet(idsUsers);
         assertThat(users).hasSize(3);
         User user = users.get(0);
         assertThat(user.getId()).isEqualTo(1);
         assertThat(user.getName()).isEqualTo("est adipisicing");
     }
 
-    @Test
-    void GetSortedListByIdSet() {
-        List<Long> idsUsers = List.of(3L, 1L, 2L);
-        List<User> users = userStorage.getByIdSet(idsUsers, true);
-        assertThat(users).hasSize(3);
-        User user = users.get(1);
-        assertThat(user.getId()).isEqualTo(1);
-        assertThat(user.getName()).isEqualTo("est adipisicing");
-    }
-
-    @Test
-    void getByEmail() {
-        User user = userStorage.getByEmail("mail@yandex.ru");
-        assertThat(user.getName()).isEqualTo("est adipisicing");
-        user = userStorage.getByEmail("9");
-        assertThat(user).isNull();
-    }
-
-    @Test
-    void addFriend() {
-        userStorage.addFriend(1, 2);
-        User user = userStorage.getById(1);
-        assertThat(user.getFriends()).hasSize(1);
-        User friend = userStorage.getById(user.getFriends().get(0));
-        assertThat(friend.getId()).isEqualTo(2);
-        assertThat(friend.getFriends()).hasSize(0);
-        userStorage.addFriend(2, 1);
-        friend = userStorage.getById(2);
-        assertThat(friend.getFriends()).hasSize(1);
-        assertThat(friend.getFriends().get(0)).isEqualTo(1);
-    }
-
-    @Test
-    void delFriend() {
-        userStorage.addFriend(1, 2);
-        userStorage.addFriend(2, 1);
-        userStorage.delFriend(1, 2);
-        User user = userStorage.getById(1);
-        assertThat(user.getFriends()).hasSize(0);
-        user = userStorage.getById(2);
-        assertThat(user.getFriends()).hasSize(1);
-        User friend = userStorage.getById(1);
-        assertThat(friend.getId()).isEqualTo(1);
-    }
 
     private static User getUser() {
         return User.builder()

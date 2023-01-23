@@ -4,11 +4,12 @@ import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Past;
+import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Data
@@ -16,11 +17,7 @@ import java.util.*;
 public class User implements Model {
 
     @PositiveOrZero(message = "ID cannot be negative")
-    private final long id;
-
-    private final List<Long> friends = new LinkedList<>();
-
-    private final List<Long> likedFilms = new LinkedList<>();
+    private long id;
 
     @Pattern(regexp = "^[A-Z0-9._%+-]+@[A-Z0-9-]+(.[A-Z0-9-]+)*\\.[A-Z]{2,}$", flags = Pattern.Flag.CASE_INSENSITIVE,
             message = "Email is wrong")
@@ -34,10 +31,10 @@ public class User implements Model {
     private String name;
 
     @NotNull(message = "Birthdate can not be null")
-    @Past(message = "Birthdate can not be in future or present")
+    @PastOrPresent(message = "Birthdate can not be in future")
     private LocalDate birthday;
 
-    public Map<String, Object> toMap(){
+    public Map<String, Object> toMap() {
         Map<String, Object> results = new HashMap<>();
         results.put("email", email);
         results.put("login", login);

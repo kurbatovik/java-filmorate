@@ -23,7 +23,7 @@ public class GenreService extends AbstractService<Genre> {
 
     @Override
     public Genre update(long id, Genre genre) {
-        Genre updateGenre = storage.getById(genre.getId());
+        Genre updateGenre = findById(genre.getId());
         updateGenre.setName(genre.getName());
         return storage.update(id, updateGenre);
     }

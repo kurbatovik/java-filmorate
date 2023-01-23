@@ -5,10 +5,9 @@ import lombok.Data;
 
 @Data
 @Builder
-public
-class Friendship {
+public class Like implements Model {
+
     private long id;
+    private long filmId;
     private long userId;
-    private long friendId;
-    private boolean accepted;
 }
