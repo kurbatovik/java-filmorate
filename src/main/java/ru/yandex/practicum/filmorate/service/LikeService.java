@@ -11,8 +11,6 @@ import ru.yandex.practicum.filmorate.storage.LikeStorage;
 @Slf4j
 public class LikeService extends AbstractService<Like> {
 
-    LikeStorage storage;
-
     @Autowired
     public LikeService(LikeStorage storage) {
         super(storage);

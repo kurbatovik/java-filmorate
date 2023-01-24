@@ -37,9 +37,8 @@ public class FilmsController extends AbstractController<Film> {
     }
 
     @GetMapping(value = "/popular")
-    public List<Film> popularFilm(@RequestParam(value = "count", defaultValue = "10") String count) {
-        int filmsCount = Integer.parseInt(count);
-        return getFilmService().findPopularFilms(filmsCount);
+    public List<Film> popularFilm(@RequestParam(value = "count", defaultValue = "10") @Positive int count) {
+        return getFilmService().findPopularFilms(count);
     }
 
     private FilmService getFilmService() {

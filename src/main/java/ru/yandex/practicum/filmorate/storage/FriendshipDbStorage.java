@@ -9,8 +9,11 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Friendship;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.mapper.UserMapper;
 
 import java.util.*;
 
@@ -78,56 +81,51 @@ public class FriendshipDbStorage implements FriendshipStorage {
     }
 
     @Override
-    public List<Long> addFriend(long userId, long friendId) {
+    public List<User> addFriend(long userId, long friendId) {
         if (userId == friendId || getFriendshipId(userId, friendId).size() > 0) {
-            return getFriendsIds(userId);
+            return findFriendsByUserId(userId);
         }
-        if (getFriendshipId(friendId, userId).size() > 0) {
-            long friendshipId = getFriendshipId(friendId, userId).get(0);
-            jdbcTemplate.update("UPDATE friends SET accepted = ? WHERE id = ?", true, friendshipId);
-        } else {
-            Map<String, Object> friendshipParameters = new HashMap<>();
-            friendshipParameters.put("user_id", userId);
-            friendshipParameters.put("friend_id", friendId);
-            friendshipParameters.put("accepted", false);
-            SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate).withTableName("friends")
-                    .usingGeneratedKeyColumns("id");
-            insert.execute(friendshipParameters);
-        }
-        return getFriendsIds(userId);
+        Map<String, Object> friendshipParameters = new HashMap<>();
+        friendshipParameters.put("user_id", userId);
+        friendshipParameters.put("friend_id", friendId);
+        friendshipParameters.put("accepted", false);
+        SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate).withTableName("friends")
+                .usingGeneratedKeyColumns("id");
+        insert.execute(friendshipParameters);
+        return findFriendsByUserId(userId);
     }
 
     @Override
-    public List<Long> delFriend(long userId, long friendId) {
+    public List<User> delFriend(long userId, long friendId) {
         Friendship friendship = getFriendship(userId, friendId);
         if (friendship == null) {
-            return getFriendsIds(userId);
-        }
-        if (friendship.getFriendId() == userId && friendship.isAccepted()) {
-            jdbcTemplate.update("UPDATE friends SET accepted = ? WHERE id = ?", false, friendship.getId());
+            return findFriendsByUserId(userId);
         }
         if (friendship.getUserId() == userId) {
             jdbcTemplate.update("DELETE FROM friends WHERE id = ?", friendship.getId());
-            if (friendship.isAccepted()) {
-                addFriend(friendId, userId);
-            }
         }
-        return getFriendsIds(userId);
+        return findFriendsByUserId(userId);
     }
 
     @Override
-    public Collection<Long> findFriendsByUserId(long userId) {
-        return getFriendsIds(userId);
+    public List<User> findFriendsByUserId(long userId) {
+        String sql = "SELECT u.id, email, login, name, birthday FROM users u JOIN friends f ON u.id = f.friend_id " +
+                "WHERE user_id = ?";
+        SqlRowSet rs = jdbcTemplate.queryForRowSet(sql, userId);
+        return UserMapper.extractorUser(rs);
     }
 
-    private List<Long> getFriendsIds(long userId) {
-        String sql = "SELECT friend_id FROM friends WHERE user_id = ? OR (friend_id = ? AND accepted = TRUE)";
-        return jdbcTemplate.queryForList(sql, Long.class, userId, userId);
+    @Override
+    public List<User> findCommonUsers(long userId, long otherId) {
+        String sql = "SELECT u.id, u.name, u.email, u.login, u.birthday FROM USERS u, FRIENDS f, FRIENDS o " +
+                "WHERE u.ID = f.FRIEND_ID AND u.ID = o.FRIEND_ID AND f.USER_ID = ? AND o.USER_ID = ?";
+        SqlRowSet rs = jdbcTemplate.queryForRowSet(sql, userId, otherId);
+        return UserMapper.extractorUser(rs);
     }
 
-    private List<Long> getFriendshipId(long id, long friendId) {
+    private List<Long> getFriendshipId(long userId, long friendId) {
         return jdbcTemplate.queryForList("SELECT id FROM friends " +
-                "WHERE user_id = ? AND friend_id = ?", Long.class, id, friendId);
+                "WHERE user_id = ? AND friend_id = ?", Long.class, userId, friendId);
     }
 
     private Friendship getFriendship(long userId, long friendId) {

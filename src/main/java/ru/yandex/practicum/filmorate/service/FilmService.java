@@ -64,7 +64,7 @@ public class FilmService extends AbstractService<Film> {
     }
 
     public List<Film> findPopularFilms(int count) {
-        return getList(likeStorage.getPopular(count));
+        return likeStorage.getPopular(count);
     }
 
 }

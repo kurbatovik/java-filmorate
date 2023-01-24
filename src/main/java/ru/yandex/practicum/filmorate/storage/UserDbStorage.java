@@ -2,11 +2,11 @@ package ru.yandex.practicum.filmorate.storage;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.mapper.UserMapper;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -17,20 +17,6 @@ import java.util.Optional;
 public class UserDbStorage implements Storage<User> {
 
     private final JdbcTemplate jdbcTemplate;
-
-    private final RowMapper<User> userMapper = ((rs, rowNum) -> {
-        long id = rs.getLong("id");
-        return User.builder()
-                .id(id)
-                .email(rs.getString("email"))
-                .name(rs.getString("name"))
-                .login(rs.getString("login"))
-                .birthday(rs.getDate("birthday").toLocalDate())
-                .build();
-    });
-
-    private final ResultSetExtractor<User> extractorUser = (
-            rs -> rs.next() ? userMapper.mapRow(rs, 1) : null);
 
     @Autowired
     public UserDbStorage(JdbcTemplate jdbcTemplate) {
@@ -63,19 +49,24 @@ public class UserDbStorage implements Storage<User> {
     @Override
     public List<User> getAll() {
         String sqlQuery = "SELECT * FROM users";
-        return jdbcTemplate.query(sqlQuery, userMapper);
+        SqlRowSet rs = jdbcTemplate.queryForRowSet(sqlQuery);
+        return UserMapper.extractorUser(rs);
     }
 
     @Override
     public Optional<User> getById(long id) {
         String sqlQuery = "SELECT * FROM users WHERE id = ?";
-        return Optional.ofNullable(jdbcTemplate.query(sqlQuery, extractorUser, id));
+        SqlRowSet rs = jdbcTemplate.queryForRowSet(sqlQuery, id);
+        List<User> users = UserMapper.extractorUser(rs);
+        User user = (users.size() > 0) ? users.get(0) : null;
+        return Optional.ofNullable(user);
     }
 
     @Override
     public List<User> getByIdSet(Collection<Long> ids) {
         String setToSql = String.join(",", Collections.nCopies(ids.size(), "?"));
         String sql = String.format("SELECT * FROM users WHERE id IN (%s)", setToSql);
-        return jdbcTemplate.query(sql, userMapper, ids.toArray());
+        SqlRowSet rs = jdbcTemplate.queryForRowSet(sql, ids.toArray());
+        return UserMapper.extractorUser(rs);
     }
 }

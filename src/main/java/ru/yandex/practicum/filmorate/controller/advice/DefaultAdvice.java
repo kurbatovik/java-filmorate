@@ -37,12 +37,21 @@ public class DefaultAdvice {
     @ExceptionHandler(NumberFormatException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleException(NumberFormatException ex) {
+        log.info("Internal server error {}", ex.getMessage());
+        return ErrorResponse.builder().message(ex.getMessage()).build();
+    }
+
+    @ExceptionHandler(Throwable.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleException(Throwable ex) {
+        log.info("Internal server error {}", ex.getMessage());
         return ErrorResponse.builder().message(ex.getMessage()).build();
     }
 
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleException(NotFoundException ex) {
+        log.info("Not found {}", ex.getMessage());
         return ErrorResponse.builder().message(ex.getMessage()).build();
     }
 

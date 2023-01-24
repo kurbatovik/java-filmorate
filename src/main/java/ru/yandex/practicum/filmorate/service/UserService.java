@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.storage.FriendshipStorage;
 import ru.yandex.practicum.filmorate.storage.Storage;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -24,9 +23,7 @@ public class UserService extends AbstractService<User> {
 
     @Override
     public User create(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
+        checkUserName(user);
         return storage.create(user);
     }
 
@@ -35,9 +32,8 @@ public class UserService extends AbstractService<User> {
         User updateUser = findById(id);
         updateUser.setEmail(user.getEmail());
         updateUser.setLogin(user.getLogin());
-        if (user.getName() != null) {
-            updateUser.setName(user.getName());
-        }
+        checkUserName(user);
+        updateUser.setName(user.getName());
         updateUser.setBirthday(user.getBirthday());
         return storage.update(id, updateUser);
     }
@@ -45,25 +41,28 @@ public class UserService extends AbstractService<User> {
     public List<User> addFriend(long id, long friendId) {
         findById(id);
         findById(friendId);
-        List<Long> friendsIds = friendshipStorage.addFriend(id, friendId);
-        return getList(friendsIds);
+        return friendshipStorage.addFriend(id, friendId);
 
     }
 
     public List<User> delFriend(long id, long friendID) {
         findById(id);
         findById(friendID);
-        return getList(friendshipStorage.delFriend(id, friendID));
+        return friendshipStorage.delFriend(id, friendID);
     }
 
     public List<User> findFriendsById(long id) {
         findById(id);
-        return getList(friendshipStorage.findFriendsByUserId(id));
+        return friendshipStorage.findFriendsByUserId(id);
     }
 
     public List<User> findCommonFriends(long id, long otherId) {
-        return getList(friendshipStorage.findFriendsByUserId(id).stream()
-                .filter(userId -> friendshipStorage.findFriendsByUserId(otherId).contains(userId))
-                .collect(Collectors.toSet()));
+        return friendshipStorage.findCommonUsers(id, otherId);
+    }
+
+    private void checkUserName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
     }
 }

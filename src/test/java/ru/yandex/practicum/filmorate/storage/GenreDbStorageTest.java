@@ -31,10 +31,10 @@ class GenreDbStorageTest {
 
     @Test
     void update() {
-        Genre genre = genreStorage.getById(1);
+        Genre genre = genreStorage.getById(1).get();
         genre.setName("Приключения");
         genreStorage.update(genre.getId(), genre);
-        assertThat(genreStorage.getById(1).getName()).isEqualTo("Приключения");
+        assertThat(genreStorage.getById(1).get().getName()).isEqualTo("Приключения");
     }
 
     @Test
@@ -56,28 +56,18 @@ class GenreDbStorageTest {
 
     @Test
     void getById() {
-        Genre genre = genreStorage.getById(1);
+        Genre genre = genreStorage.getById(1).orElse(null);
         assertThat(genre.getName()).isEqualTo("Комедия");
-        genre = genreStorage.getById(9);
+        genre = genreStorage.getById(9).orElse(null);
         assertThat(genre).isNull();
     }
 
     @Test
     void getByIdSet() {
         List<Long> idsGenres = List.of(3L, 1L, 2L);
-        List<Genre> genres = genreStorage.getByIdSet(idsGenres, false);
+        List<Genre> genres = genreStorage.getByIdSet(idsGenres);
         assertThat(genres).hasSize(3);
         Genre genre = genres.get(0);
-        assertThat(genre.getId()).isEqualTo(1);
-        assertThat(genre.getName()).isEqualTo("Комедия");
-    }
-
-    @Test
-    void GetSortedListByIdSet() {
-        List<Long> idsGenres = List.of(3L, 1L, 2L);
-        List<Genre> genres = genreStorage.getByIdSet(idsGenres, true);
-        assertThat(genres).hasSize(3);
-        Genre genre = genres.get(1);
         assertThat(genre.getId()).isEqualTo(1);
         assertThat(genre.getName()).isEqualTo("Комедия");
     }

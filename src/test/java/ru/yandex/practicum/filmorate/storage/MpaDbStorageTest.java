@@ -31,10 +31,10 @@ class MpaDbStorageTest {
 
     @Test
     void update() {
-        MPA mpa = mpaStorage.getById(1);
+        MPA mpa = mpaStorage.getById(1).get();
         mpa.setName("AG-77");
         mpaStorage.update(mpa.getId(), mpa);
-        assertThat(mpaStorage.getById(1).getName()).isEqualTo("AG-77");
+        assertThat(mpaStorage.getById(1).get().getName()).isEqualTo("AG-77");
     }
 
     @Test
@@ -56,28 +56,18 @@ class MpaDbStorageTest {
 
     @Test
     void getById() {
-        MPA mpa = mpaStorage.getById(1);
+        MPA mpa = mpaStorage.getById(1).orElse(null);
         assertThat(mpa.getName()).isEqualTo("G");
-        mpa = mpaStorage.getById(9);
+        mpa = mpaStorage.getById(9).orElse(null);
         assertThat(mpa).isNull();
     }
 
     @Test
     void getByIdSet() {
         List<Long> idsMPAs = List.of(3L, 1L, 2L);
-        List<MPA> mpas = mpaStorage.getByIdSet(idsMPAs, false);
+        List<MPA> mpas = mpaStorage.getByIdSet(idsMPAs);
         assertThat(mpas).hasSize(3);
         MPA mpa = mpas.get(0);
-        assertThat(mpa.getId()).isEqualTo(1);
-        assertThat(mpa.getName()).isEqualTo("G");
-    }
-
-    @Test
-    void GetSortedListByIdSet() {
-        List<Long> idsMPAs = List.of(3L, 1L, 2L);
-        List<MPA> mpas = mpaStorage.getByIdSet(idsMPAs, true);
-        assertThat(mpas).hasSize(3);
-        MPA mpa = mpas.get(1);
         assertThat(mpa.getId()).isEqualTo(1);
         assertThat(mpa.getName()).isEqualTo("G");
     }

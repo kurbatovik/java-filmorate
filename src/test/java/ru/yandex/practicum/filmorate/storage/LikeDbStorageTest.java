@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
+import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
 
@@ -45,27 +46,27 @@ class LikeDbStorageTest {
     @Test
     void getPopular() {
         storage.addLike(3, 1);
-        List<Long> filmsIds = storage.getPopular(10);
+        List<Film> filmsIds = storage.getPopular(10);
         assertThat(filmsIds).hasSize(3);
-        assertThat(filmsIds.get(0)).isEqualTo(3);
-        assertThat(filmsIds.get(1)).isEqualTo(1);
-        assertThat(filmsIds.get(2)).isEqualTo(2);
+        assertThat(filmsIds.get(0).getId()).isEqualTo(3);
+        assertThat(filmsIds.get(1).getId()).isEqualTo(1);
+        assertThat(filmsIds.get(2).getId()).isEqualTo(2);
 
         storage.addLike(3, 2);
         storage.addLike(2, 2);
         filmsIds = storage.getPopular(10);
         assertThat(filmsIds).hasSize(3);
-        assertThat(filmsIds.get(0)).isEqualTo(3);
-        assertThat(filmsIds.get(1)).isEqualTo(2);
-        assertThat(filmsIds.get(2)).isEqualTo(1);
+        assertThat(filmsIds.get(0).getId()).isEqualTo(3);
+        assertThat(filmsIds.get(1).getId()).isEqualTo(2);
+        assertThat(filmsIds.get(2).getId()).isEqualTo(1);
 
         storage.addLike(3, 2);
         storage.addLike(2, 2);
         filmsIds = storage.getPopular(10);
         assertThat(filmsIds).hasSize(3);
-        assertThat(filmsIds.get(0)).isEqualTo(3);
-        assertThat(filmsIds.get(1)).isEqualTo(2);
-        assertThat(filmsIds.get(2)).isEqualTo(1);
+        assertThat(filmsIds.get(0).getId()).isEqualTo(3);
+        assertThat(filmsIds.get(1).getId()).isEqualTo(2);
+        assertThat(filmsIds.get(2).getId()).isEqualTo(1);
     }
 
 }

@@ -33,11 +33,11 @@ class FriendshipDbStorageTest {
         assertThat(storage.findFriendsByUserId(1)).hasSize(1);
 
         storage.addFriend(1, 3);
-        assertThat(storage.getAll()).hasSize(2);
+        assertThat(storage.getAll()).hasSize(3);
         assertThat(storage.findFriendsByUserId(1)).hasSize(2);
 
         storage.addFriend(2, 1);
-        assertThat(storage.getAll()).hasSize(2);
+        assertThat(storage.getAll()).hasSize(4);
         assertThat(storage.findFriendsByUserId(1)).hasSize(2);
         assertThat(storage.findFriendsByUserId(2)).hasSize(1);
     }

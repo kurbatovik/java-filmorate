@@ -7,8 +7,11 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Like;
+import ru.yandex.practicum.filmorate.storage.mapper.FilmMapper;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -97,9 +100,13 @@ public class LikeDbStorage implements LikeStorage {
     }
 
     @Override
-    public List<Long> getPopular(int count) {
-        String sql = "SELECT f.id FROM films f LEFT JOIN likes l ON f.id = l.film_id " +
-                "GROUP BY f.id ORDER BY COUNT(l.user_id) DESC LIMIT ?";
-        return jdbcTemplate.queryForList(sql, Long.class, count);
+    public List<Film> getPopular(int count) {
+        String sql = "SELECT f.id,f.name, description, release_date, duration, mpa_id, m.name mpa_name, genre_id, g.name" +
+                " genre_name FROM (SELECT f.id, f.name, f.description, f.release_date, f.duration, f.mpa_id, " +
+                "COUNT(l.user_id) count FROM films f LEFT JOIN likes l ON f.id = l.film_id GROUP BY f.id ORDER BY count " +
+                "DESC LIMIT ?) f JOIN mpa m ON m.id = f.mpa_id LEFT JOIN films_genres fg ON f.id = fg.film_id LEFT JOIN " +
+                "genres g ON g.id = fg.genre_id ORDER BY count DESC ";
+        SqlRowSet rs = jdbcTemplate.queryForRowSet(sql, count);
+        return FilmMapper.extractorFilm(rs);
     }
 }
