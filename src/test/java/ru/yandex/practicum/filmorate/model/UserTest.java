@@ -89,16 +89,10 @@ class UserTest extends Validatable {
     @Test
     void birthdayFieldTest() {
         User user = new User(1, "yandex-user@cloud.yandex.ru", "Vasya",
-                "", LocalDate.now());
+                "", LocalDate.of(2031, 10, 30));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertEquals(1, violations.size());
-        assertEquals("Birthdate can not be in future or present", violations.iterator().next().getMessage());
-
-        user = new User(1, "yandex-user@cloud.yandex.ru", "Vasya",
-                "", LocalDate.of(2031, 10, 30));
-        violations = validator.validate(user);
-        assertEquals(1, violations.size());
-        assertEquals("Birthdate can not be in future or present", violations.iterator().next().getMessage());
+        assertEquals("Birthdate can not be in future", violations.iterator().next().getMessage());
 
 
         user = new User(1, "yandex-user@cloud.yandex.ru", "Vasya",
