@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -8,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Model;
 import ru.yandex.practicum.filmorate.service.AbstractService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.util.List;
 
 @Slf4j
@@ -27,9 +27,15 @@ public abstract class AbstractController<E extends Model> {
         return service.findById(id);
     }
 
+    @GetMapping("/delete/{id}")
+    public String delete(@PathVariable(name = "id") Integer id) {
+        log.info("Request on delete with id {}", id);
+        return service.deleteById(id) ? "Success" : "Failure";
+    }
+
     @ResponseStatus(value = HttpStatus.CREATED)
     @PostMapping(value = "")
-    public E post(@Valid @RequestBody @NonNull E entity) {
+    public E post(@Valid @RequestBody E entity) {
         log.debug("Request on create: {}", entity);
         E newEntity = service.create(entity);
         log.info("Has been created: {}", newEntity);
@@ -37,12 +43,12 @@ public abstract class AbstractController<E extends Model> {
     }
 
     @PutMapping(value = "")
-    public E put(@Valid @RequestBody @NonNull E entity) {
+    public E put(@Valid @RequestBody E entity) {
         return put(entity, entity.getId());
     }
 
     @PutMapping(value = "/{id}")
-    public E put(@Valid @RequestBody @NonNull E entity, @PathVariable(name = "id") long id) {
+    public E put(@Valid @RequestBody E entity, @PathVariable(name = "id") @Positive long id) {
         log.debug("Request on update: {}", entity);
         E updateEntity = service.update(id, entity);
         log.info("Updated: {}", updateEntity);

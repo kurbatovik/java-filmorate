@@ -33,7 +33,7 @@ public class UsersController extends AbstractController<User> {
 
     @GetMapping(value = "/{id}/friends")
     public List<User> findFriends(@PathVariable(value = "id") long id) {
-        return getUserService().findFriendById(id);
+        return getUserService().findFriendsById(id);
     }
 
     @GetMapping(value = "/{id}/friends/common/{otherId}")
