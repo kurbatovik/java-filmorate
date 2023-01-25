@@ -1,15 +1,21 @@
 package ru.yandex.practicum.filmorate.storage.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
 
-    public static List<Film> extractorFilm(SqlRowSet rs){
+    public static List<Film> extractorFilm(SqlRowSet rs) {
         Map<Long, Film> filmsById = new LinkedHashMap<>();
         while (rs.next()) {
             long id = rs.getLong("id");
@@ -32,7 +38,7 @@ public class FilmMapper {
                 .name(rs.getString("GENRE_NAME")).build();
     }
 
-    private static Film buildFilm(SqlRowSet rs, long id){
+    private static Film buildFilm(SqlRowSet rs, long id) {
         Film film = Film.builder()
                 .id(id)
                 .name(rs.getString("name"))

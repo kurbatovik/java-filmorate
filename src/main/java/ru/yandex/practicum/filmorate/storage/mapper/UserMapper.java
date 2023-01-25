@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -8,9 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserMapper {
 
-    public static List<User> extractorUser(SqlRowSet rs){
+    public static List<User> extractorUser(SqlRowSet rs) {
         Map<Long, User> usersById = new HashMap<>();
         while (rs.next()) {
             long id = rs.getLong("id");
@@ -23,7 +26,7 @@ public class UserMapper {
         return new ArrayList<>(usersById.values());
     }
 
-    private static User buildUser(SqlRowSet rs, long id){
+    private static User buildUser(SqlRowSet rs, long id) {
         return User.builder()
                 .id(id)
                 .email(rs.getString("email"))
